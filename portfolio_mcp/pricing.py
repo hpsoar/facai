@@ -10,12 +10,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Iterable, Optional
 
-import httpx
+import requests
+import yfinance as yf
 
 from .models import PriceQuote
 from .proxy import resolve_proxy
 
-YAHOO_QUOTE_URL = "https://query1.finance.yahoo.com/v7/finance/quote"
 REQUEST_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -37,7 +37,7 @@ class CacheEntry:
 
 
 class PriceService:
-    """Fetches quotes via Yahoo Finance public quote API with a TTL cache."""
+    """Fetches quotes via yfinance with a TTL cache."""
 
     def __init__(
         self,
@@ -56,13 +56,9 @@ class PriceService:
         )
         self.max_retries = max(self.max_retries, 0)
         self._cache: Dict[str, CacheEntry] = {}
-        client_kwargs = {"timeout": self.timeout, "headers": REQUEST_HEADERS}
-        if self.proxy:
-            client_kwargs["proxy"] = self.proxy
-        self._client = httpx.Client(**client_kwargs)
 
     async def aclose(self) -> None:
-        await asyncio.to_thread(self._client.close)
+        return None
 
     async def get_quotes(self, symbols: Iterable[str]) -> Dict[str, PriceQuote]:
         tasks = [self._get_symbol(symbol) for symbol in symbols]
@@ -90,23 +86,32 @@ class PriceService:
 
     def _fetch_quote_sync(self, symbol: str) -> PriceQuote:
         now = datetime.now(timezone.utc)
-        params = {"symbols": symbol}
         price: Optional[float] = None
         currency: Optional[str] = None
-        provider = "yahoo_quote_api"
+        provider = "yfinance_sdk"
         attempts = self.max_retries + 1
-        try:
-            response = self._client.get(YAHOO_QUOTE_URL, params=params)
-            response.raise_for_status()
-            payload = response.json()
-            result = (payload.get("quoteResponse") or {}).get("result") or []
-            if result:
-                info = result[0]
-                price = info.get("regularMarketPrice") or info.get("postMarketPrice")
-                currency = info.get("currency")
-        except Exception:
-            # Network errors return an empty quote; caller will see price None.
-            pass
+        last_error: Optional[Exception] = None
+        for attempt in range(attempts):
+            try:
+                with self._create_session() as session:
+                    ticker = yf.Ticker(symbol, session=session)
+                    price, currency = self._extract_price_and_currency(ticker)
+                if price is not None:
+                    break
+            except Exception as exc:
+                last_error = exc
+                logger.debug(
+                    "yfinance fetch failed for %s (attempt %s/%s): %s",
+                    symbol,
+                    attempt + 1,
+                    attempts,
+                    exc,
+                )
+            if attempt < attempts - 1:
+                backoff = min(2 ** attempt, 5)
+                time.sleep(backoff)
+        if price is None and last_error is not None:
+            logger.warning("Failed to fetch price for %s via yfinance: %s", symbol, last_error)
         return PriceQuote(
             symbol=symbol,
             price=float(price) if price is not None else None,
@@ -114,3 +119,65 @@ class PriceService:
             fetched_at=now,
             provider=provider,
         )
+
+    def _create_session(self) -> requests.Session:
+        session = requests.Session()
+        session.headers.update(REQUEST_HEADERS)
+        if self.proxy:
+            session.proxies.update({"http": self.proxy, "https": self.proxy})
+        original_request = session.request
+
+        def request_with_timeout(method, url, **kwargs):  # type: ignore[override]
+            kwargs.setdefault("timeout", self.timeout)
+            return original_request(method, url, **kwargs)
+
+        session.request = request_with_timeout  # type: ignore[assignment]
+        return session
+
+    def _extract_price_and_currency(self, ticker: yf.Ticker) -> tuple[Optional[float], Optional[str]]:
+        price = None
+        currency = None
+        fast_info = getattr(ticker, "fast_info", None)
+        fast_info_dict = None
+        if fast_info is not None:
+            try:
+                fast_info_dict = dict(fast_info)
+            except Exception:
+                fast_info_dict = fast_info
+        if fast_info_dict:
+            get = fast_info_dict.get  # type: ignore[attr-defined]
+            price = self._safe_float(get("last_price")) or self._safe_float(
+                get("regular_market_price")
+            )
+            currency = get("currency") or get("last_price_currency")
+        if price is None:
+            history = ticker.history(period="5d", interval="1d", auto_adjust=False, actions=False)
+            price = self._price_from_history(history)
+        if currency is None and fast_info_dict:
+            currency = fast_info_dict.get("currency")  # type: ignore[attr-defined]
+        return price, currency
+
+    @staticmethod
+    def _price_from_history(history) -> Optional[float]:
+        if history is None:
+            return None
+        close = getattr(history, "Close", None)
+        if close is None:
+            return None
+        try:
+            close = close.dropna()
+        except Exception:
+            return None
+        if len(close) == 0:
+            return None
+        try:
+            return float(close.iloc[-1])
+        except (ValueError, TypeError, IndexError):
+            return None
+
+    @staticmethod
+    def _safe_float(value: Optional[float]) -> Optional[float]:
+        try:
+            return float(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
