@@ -1,0 +1,2 @@
+2026-01-16 14:54:53,947 [INFO] portfolio_mcp.logging_utils: Logging initialized level=INFO path=logs/portfolio-mcp.log
+2026-01-16 14:54:53,948 [INFO] portfolio_mcp.__main__: Starting portfolio MCP transport=stdio host=127.0.0.1 port=8000 log=logs/portfolio-mcp.log

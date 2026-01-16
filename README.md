@@ -1,0 +1,139 @@
+# Facai Portfolio MCP
+
+This repository contains a simple Model Context Protocol (MCP) server that lets you maintain
+manual holdings, refresh live prices from Yahoo Finance, and expose the resulting portfolio data to
+AI agents. You keep full control of positions by editing a YAML file, while the MCP server handles
+price polling, PnL calculations, and structured responses. Multiple named portfolios are supported,
+so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具直接增删改资产。
+
+## Features
+- Manual holdings file (`data/portfolio.yaml`) with multiple named portfolios.
+- Background price refresh with a configurable interval and TTL-based caching.
+- Tools/resources for both combined totals and individual portfolio breakdowns.
+- Resources so agents can quickly pull a digestible snapshot without running tools first.
+- Built with Python and the `mcp` reference SDK so it runs anywhere with basic deps.
+
+## Quick Start
+1. **Create a virtual environment** (optional but recommended)
+   ```bash
+   uv venv .venv && source .venv/bin/activate
+   ```
+   You can use any environment manager (venv, conda, etc.).
+2. **Install dependencies**
+   ```bash
+   pip install -e .
+   ```
+3. **Copy and edit the sample portfolio**
+   ```bash
+   cp data/sample_portfolio.yaml data/portfolio.yaml
+   ```
+   Adjust the portfolios/holdings with your tickers, quantities, and cost basis data. Symbols follow
+   the Yahoo Finance format (e.g., `AAPL`, `0700.HK`, `600519.SS`, `000001.SZ`).
+4. **Run the MCP server**
+   ```bash
+   portfolio-mcp
+   ```
+   The binary speaks MCP over stdio, so point your AI client to the script. Use env vars to tweak
+   behavior:
+   - `PORTFOLIO_FILE`: path to the YAML holdings file (default `data/portfolio.yaml`).
+   - `REFRESH_INTERVAL_SECONDS`: background refresh cadence (default 900 seconds).
+   - `PRICE_TTL_SECONDS`: cache lifetime per symbol (default 300 seconds).
+   - `YF_PROXY`: optional HTTPS proxy passed to the Yahoo Finance quote client (defaults to
+     `http://127.0.0.1:7890`; set to an empty string to disable).
+   - `PORTFOLIO_LOG_FILE`: where to write server logs (default `logs/portfolio-mcp.log`).
+   - `PORTFOLIO_LOG_LEVEL`: logging level (default `INFO`).
+
+## MCP Surfaces
+- **Resource** `portfolio://portfolios` — list portfolio ids, names, and holding counts.
+- **Resource** `portfolio://summary` — combined valuation totals with last refresh time.
+- **Resource** `portfolio://summary/{portfolio_id}` — summary for a specific portfolio
+  (`portfolio_id` from the YAML file).
+- **Resource** `portfolio://positions` — aggregated holdings with metadata.
+- **Resource** `portfolio://positions/{portfolio_id}` — holdings for a single portfolio.
+- **Tool** `list_portfolios` — same data as the resource, but invokable on demand.
+- **Tool** `refresh_prices` — forces an immediate price pull for all tracked symbols.
+- **Tool** `get_positions(symbol?, portfolio_id?)` — filter holdings by ticker, portfolio, or both.
+- **Tool** `reload_portfolio` — re-read the YAML file if you changed it on disk.
+- **Tool** `get_summary(portfolio_id?)` — structured summary for combined or per-portfolio views.
+- **Tool** `search_symbols(query, region?, limit?)` — Yahoo Finance fuzzy lookup for tickers.
+- **Tool** `create_portfolio` / `update_portfolio` / `delete_portfolio(force?)` — manage portfolio
+  containers.
+- **Tool** `add_holding` / `remove_holding` / `update_holding` — edit holdings (supports fuzzy search
+  via `search_query`).
+
+The CLI defaults to stdio transport, but you can switch transports when needed:
+
+```bash
+portfolio-mcp --transport streamable-http --host 0.0.0.0 --port 9000
+```
+
+## Data File Format
+```yaml
+base_currency: CNY
+portfolios:
+  - id: cn-growth
+    name: A股成长
+    notes: 核心消费与白酒
+    holdings:
+      - id: maotai
+        broker: a-stock
+        symbol: 600519.SS
+        name: 贵州茅台
+        quantity: 20
+        cost_basis: 1680.5
+        currency: CNY
+        category: consumer
+  - id: hk-tech
+    name: 港股互联网
+    holdings:
+      - id: tencent
+        broker: hk-stock
+        symbol: 0700.HK
+        name: 腾讯控股
+        quantity: 150
+        cost_basis: 305.0
+        currency: HKD
+        category: tech
+```
+
+Fields beyond `symbol`, `quantity`, and `cost_basis` are optional and used only for display. You can
+add your own metadata, and the MCP will surface it untouched so agents can reason about tags or
+scenarios. If you prefer the legacy single-portfolio format, you may omit the `portfolios` section
+and keep a top-level `holdings:` list—the server will treat it as a default portfolio (`id:
+default`).
+
+## Logging
+- Logs are written to `logs/portfolio-mcp.log` by default; override with `PORTFOLIO_LOG_FILE`.
+- Adjust verbosity via `PORTFOLIO_LOG_LEVEL` (e.g., `DEBUG` for detailed traces).
+- Each resource/tool invocation records concise entries (portfolio id, holdings count, key params) so
+  you can audit AI actions without reading stdout.
+
+## Managing Portfolios via MCP
+- **Create** a portfolio: `create_portfolio(portfolio_id="hk-income", name="港股收息")`
+- **List** all portfolios: `list_portfolios`
+- **Add** a holding with fuzzy search: `add_holding(portfolio_id="hk-income", search_query="中电控股", quantity=100, cost_basis=49.5, currency="HKD")`
+- **Remove** a holding: `remove_holding(portfolio_id="hk-income", holding_key="clp")` (matches id or symbol)
+- **Update** a holding’s数量/成本: `update_holding(portfolio_id="hk-income", holding_id="clp", quantity=150)`
+- **Delete** a portfolio**:** `delete_portfolio(portfolio_id="hk-income", force=true)` (force required when非空)
+
+这些操作会自动落盘到 `PORTFOLIO_FILE` 并刷新行情缓存，Claude/CLI 即可立即使用最新配置。
+
+## Scheduling Refreshes
+The server already refreshes prices in the background as long as it stays running. If you only want
+updates occasionally, you can disable the interval (`REFRESH_INTERVAL_SECONDS=0`) and instead run the
+`refresh_prices` tool from the AI client whenever needed.
+
+For unattended operation, keep the MCP in a tmux session or systemd service so it continually updates
+prices and responds instantly when your AI requests the summary resource.
+
+## Security Notes
+- The holdings file never leaves your machine unless you share it. MCP responses include only the
+data you request.
+- No trading credentials or brokerage APIs are involved; prices come from public quote endpoints.
+- If you later integrate with real broker APIs, treat credentials carefully and extend the MCP with
+  dedicated secrets management.
+
+## Next Steps
+- Add multiple price providers (e.g., Alpha Vantage) and failover logic.
+- Track cash, crypto, or funds by adding new loader modules (or additional portfolio entries).
+- Log refresh history to a SQLite DB for auditing.

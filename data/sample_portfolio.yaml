@@ -1,0 +1,41 @@
+base_currency: CNY
+portfolios:
+  - id: cn-growth
+    name: A股成长
+    notes: 核心消费与白酒
+    holdings:
+      - id: maotai
+        broker: a-stock
+        symbol: 600519.SS
+        name: 贵州茅台
+        quantity: 20
+        cost_basis: 1680.5
+        currency: CNY
+        category: consumer
+      - id: healthcare
+        broker: a-stock
+        symbol: 000963.SZ
+        name: 华东医药
+        quantity: 500
+        cost_basis: 49.3
+        currency: CNY
+        category: healthcare
+  - id: hk-tech
+    name: 港股互联网
+    holdings:
+      - id: tencent
+        broker: hk-stock
+        symbol: 0700.HK
+        name: 腾讯控股
+        quantity: 150
+        cost_basis: 305.0
+        currency: HKD
+        category: tech
+      - id: meituan
+        broker: hk-stock
+        symbol: 3690.HK
+        name: 美团点评-W
+        quantity: 200
+        cost_basis: 140.2
+        currency: HKD
+        category: tech
