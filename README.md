@@ -40,6 +40,7 @@ so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具�
    - `PRICE_TTL_SECONDS`: cache lifetime per symbol (default 300 seconds).
    - `YF_PROXY`: optional HTTPS proxy passed to the Yahoo Finance quote client (defaults to
      `http://127.0.0.1:7890`; set to an empty string to disable).
+   - `YF_MAX_RETRIES`: how many times to retry Yahoo quote requests when 429/503 occurs (default 2).
    - `PORTFOLIO_LOG_FILE`: where to write server logs (default `logs/portfolio-mcp.log`).
    - `PORTFOLIO_LOG_LEVEL`: logging level (default `INFO`).
 
