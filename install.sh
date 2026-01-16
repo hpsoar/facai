@@ -51,8 +51,9 @@ fi
 
 echo ""
 echo "步骤 3: 安装依赖..."
-"$VENV_DIR/bin/pip" install --upgrade pip
-"$VENV_DIR/bin/pip" install -e "$INSTALL_DIR"
+"$VENV_DIR/bin/pip" install --upgrade pip -q
+"$VENV_DIR/bin/pip" install -e "$INSTALL_DIR" -q
+echo "依赖安装完成"
 
 echo ""
 echo "步骤 4: 创建示例配置文件..."
