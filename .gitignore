@@ -1,0 +1,10 @@
+settings.py
+.idea
+t.py
+info.txt
+**/__pycache__
+**/.DS_Store
+**/log
+ft_process_data/agent/assess/data
+**/.cache
+CLAUDE.md
