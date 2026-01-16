@@ -252,7 +252,7 @@ def build_server(app: PortfolioApp, *, name: str, version: str) -> FastMCP:
 
     @mcp.tool()
     async def search_symbols(query: str, region: Optional[str] = None, limit: int = 5) -> Dict[str, Any]:
-        """Fuzzy search for symbols on Yahoo Finance."""
+        """Fuzzy search for symbols via the yfinance SDK."""
         result = await app.search_symbols(query, region, limit)
         logger.info(
             "Tool search_symbols query=%s results=%s error=%s",

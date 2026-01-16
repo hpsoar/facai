@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 
 class Holding(BaseModel):
-    symbol: str = Field(..., description="Yahoo Finance style ticker symbol")
+    symbol: str = Field(..., description="Yahoo Finance / yfinance style ticker symbol")
     quantity: float = Field(..., ge=0)
     cost_basis: float = Field(..., ge=0, description="Per-share cost basis in holding currency")
     currency: Optional[str] = Field(None, description="Currency code of the cost basis")

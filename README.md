@@ -1,7 +1,7 @@
 # Facai Portfolio MCP
 
 This repository contains a simple Model Context Protocol (MCP) server that lets you maintain
-manual holdings, refresh live prices from Yahoo Finance, and expose the resulting portfolio data to
+manual holdings, refresh live prices via the yfinance SDK, and expose the resulting portfolio data to
 AI agents. You keep full control of positions by editing a YAML file, while the MCP server handles
 price polling, PnL calculations, and structured responses. Multiple named portfolios are supported,
 so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具直接增删改资产。
@@ -28,7 +28,7 @@ so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具�
    cp data/sample_portfolio.yaml data/portfolio.yaml
    ```
    Adjust the portfolios/holdings with your tickers, quantities, and cost basis data. Symbols follow
-   the Yahoo Finance format (e.g., `AAPL`, `0700.HK`, `600519.SS`, `000001.SZ`).
+   the Yahoo Finance/yfinance format (e.g., `AAPL`, `0700.HK`, `600519.SS`, `000001.SZ`).
 4. **Run the MCP server**
    ```bash
    portfolio-mcp
@@ -38,9 +38,8 @@ so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具�
    - `PORTFOLIO_FILE`: path to the YAML holdings file (default `data/portfolio.yaml`).
    - `REFRESH_INTERVAL_SECONDS`: background refresh cadence (default 900 seconds).
    - `PRICE_TTL_SECONDS`: cache lifetime per symbol (default 300 seconds).
-   - `YF_PROXY`: optional HTTPS proxy passed to the Yahoo Finance quote client (defaults to
-     `http://127.0.0.1:7890`; set to an empty string to disable).
-   - `YF_MAX_RETRIES`: how many times to retry Yahoo quote requests when 429/503 occurs (default 2).
+   - `YF_PROXY`: optional HTTPS proxy passed to yfinance (leave unset/empty to disable).
+   - `YF_MAX_RETRIES`: how many times to retry yfinance quote requests when 429/503 occurs (default 2).
    - `PORTFOLIO_LOG_FILE`: where to write server logs (default `logs/portfolio-mcp.log`).
    - `PORTFOLIO_LOG_LEVEL`: logging level (default `INFO`).
 
@@ -56,7 +55,7 @@ so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具�
 - **Tool** `get_positions(symbol?, portfolio_id?)` — filter holdings by ticker, portfolio, or both.
 - **Tool** `reload_portfolio` — re-read the YAML file if you changed it on disk.
 - **Tool** `get_summary(portfolio_id?)` — structured summary for combined or per-portfolio views.
-- **Tool** `search_symbols(query, region?, limit?)` — Yahoo Finance fuzzy lookup for tickers.
+- **Tool** `search_symbols(query, region?, limit?)` — yfinance-backed fuzzy lookup for tickers.
 - **Tool** `create_portfolio` / `update_portfolio` / `delete_portfolio(force?)` — manage portfolio
   containers.
 - **Tool** `add_holding` / `remove_holding` / `update_holding` — edit holdings (supports fuzzy search

@@ -1,41 +1,56 @@
 base_currency: CNY
+holdings: []
 portfolios:
-  - id: cn-growth
-    name: A股成长
-    notes: 核心消费与白酒
-    holdings:
-      - id: maotai
-        broker: a-stock
-        symbol: 600519.SS
-        name: 贵州茅台
-        quantity: 20
-        cost_basis: 1680.5
-        currency: CNY
-        category: consumer
-      - id: healthcare
-        broker: a-stock
-        symbol: 000963.SZ
-        name: 华东医药
-        quantity: 500
-        cost_basis: 49.3
-        currency: CNY
-        category: healthcare
-  - id: hk-tech
-    name: 港股互联网
-    holdings:
-      - id: tencent
-        broker: hk-stock
-        symbol: 0700.HK
-        name: 腾讯控股
-        quantity: 150
-        cost_basis: 305.0
-        currency: HKD
-        category: tech
-      - id: meituan
-        broker: hk-stock
-        symbol: 3690.HK
-        name: 美团点评-W
-        quantity: 200
-        cost_basis: 140.2
-        currency: HKD
-        category: tech
+- id: cn-growth
+  name: A股成长
+  notes: 核心消费与白酒
+  holdings:
+  - symbol: 600519.SS
+    quantity: 20.0
+    cost_basis: 1680.5
+    currency: CNY
+    id: maotai
+    name: 贵州茅台
+    broker: a-stock
+    category: consumer
+    notes: null
+  - symbol: 000963.SZ
+    quantity: 500.0
+    cost_basis: 49.3
+    currency: CNY
+    id: healthcare
+    name: 华东医药
+    broker: a-stock
+    category: healthcare
+    notes: null
+  - symbol: AAPL
+    quantity: 10.0
+    cost_basis: 180.0
+    currency: USD
+    id: aapl
+    name: null
+    broker: null
+    category: null
+    notes: null
+- id: hk-tech
+  name: 港股互联网
+  notes: null
+  holdings:
+  - symbol: 0700.HK
+    quantity: 150.0
+    cost_basis: 305.0
+    currency: HKD
+    id: tencent
+    name: 腾讯控股
+    broker: hk-stock
+    category: tech
+    notes: null
+  - symbol: 3690.HK
+    quantity: 200.0
+    cost_basis: 140.2
+    currency: HKD
+    id: meituan
+    name: 美团点评-W
+    broker: hk-stock
+    category: tech
+    notes: null

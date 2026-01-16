@@ -1,23 +1,16 @@
-"""Yahoo Finance helper utilities."""
+"""Symbol search helpers backed by the yfinance SDK."""
 
 from __future__ import annotations
 
 from typing import Optional
 
-import httpx
+import logging
 
-SEARCH_URL = "https://query2.finance.yahoo.com/v1/finance/search"
-USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-)
-DEFAULT_HEADERS = {
-    "User-Agent": USER_AGENT,
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Referer": "https://finance.yahoo.com/",
-    "Connection": "keep-alive",
-}
+import yfinance as yf
+
+from .yfinance_utils import configure_network
+
+logger = logging.getLogger(__name__)
 
 
 def search_symbols(
@@ -26,36 +19,48 @@ def search_symbols(
     region: Optional[str] = None,
     quotes_count: int = 5,
     proxy: Optional[str] = None,
-    timeout: float = 10.0,
+    timeout: int = 10,
 ) -> list[dict]:
-    params = {
-        "q": query,
-        "quotesCount": max(1, quotes_count),
-        "newsCount": 0,
-        "enableNavLinks": False,
-        "enableEnhancedTrivialQuery": True,
-    }
-    if region:
-        params["region"] = region
-    client_kwargs = {"timeout": timeout, "headers": DEFAULT_HEADERS}
-    if proxy:
-        client_kwargs["proxy"] = proxy
+    limit = max(1, quotes_count)
+    configure_network(proxy, None)
     try:
-        with httpx.Client(**client_kwargs) as client:
-            response = client.get(SEARCH_URL, params=params)
-            response.raise_for_status()
-            payload = response.json()
+        search = yf.Search(
+            query,
+            max_results=limit,
+            news_count=0,
+            lists_count=0,
+            include_cb=False,
+            include_nav_links=False,
+            include_research=False,
+            include_cultural_assets=False,
+            enable_fuzzy_query=True,
+            timeout=timeout,
+        )
+        quotes = search.quotes or []
+        logger.debug(
+            "yfinance search query=%s limit=%s region=%s quote_types=%s",
+            query,
+            limit,
+            region,
+            [type(q).__name__ for q in (quotes if isinstance(quotes, list) else [quotes])],
+        )
     except Exception as exc:  # pragma: no cover - network failures
-        raise RuntimeError(f"Yahoo search failed: {exc}") from exc
-    quotes = payload.get("quotes") or []
+        logger.exception("yfinance search failed for query=%s region=%s", query, region)
+        raise RuntimeError(f"yfinance search failed: {exc}") from exc
+
     results: list[dict] = []
     for quote in quotes:
+        if not isinstance(quote, dict):
+            logger.debug(
+                "yfinance search skipping non-dict entry type=%s value=%r", type(quote), quote
+            )
+            continue
         results.append(
             {
                 "symbol": quote.get("symbol"),
                 "shortName": quote.get("shortname") or quote.get("shortName"),
                 "longName": quote.get("longname") or quote.get("longName"),
-                "exchange": quote.get("exchange"),
+                "exchange": quote.get("exchange") or quote.get("exchDisp"),
                 "quoteType": quote.get("quoteType"),
             }
         )

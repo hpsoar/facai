@@ -67,10 +67,15 @@ class PortfolioApp:
 
     def list_portfolios(self) -> List[Dict[str, Optional[str]]]:
         meta = self.store.portfolio_metadata()
+        total_holdings = 0
+        for item in meta:
+            count = item.get("holding_count")
+            if isinstance(count, int):
+                total_holdings += count
         combined = {
             "id": AGGREGATE_PORTFOLIO_ID,
             "name": "All Portfolios",
-            "holding_count": sum(item.get("holding_count", 0) or 0 for item in meta),
+            "holding_count": total_holdings,
         }
         return [combined, *meta]
 
@@ -181,9 +186,7 @@ class PortfolioApp:
         await self.poller.refresh_now()
         return {"holding": holding.model_dump(mode="json")}
 
-    async def search_symbols(
-        self, query: str, region: Optional[str], limit: int
-    ) -> Dict[str, Any]:
+    async def search_symbols(self, query: str, region: Optional[str], limit: int) -> Dict[str, Any]:
         proxy = resolve_proxy()
         try:
             results = await asyncio.to_thread(
