@@ -95,36 +95,18 @@ class PriceService:
         currency: Optional[str] = None
         provider = "yahoo_quote_api"
         attempts = self.max_retries + 1
-        for attempt in range(attempts):
-            try:
-                response = self._client.get(YAHOO_QUOTE_URL, params=params)
-                response.raise_for_status()
-                payload = response.json()
-                result = (payload.get("quoteResponse") or {}).get("result") or []
-                if result:
-                    info = result[0]
-                    price = info.get("regularMarketPrice") or info.get("postMarketPrice")
-                    currency = info.get("currency")
-                break
-            except httpx.HTTPStatusError as exc:
-                status = exc.response.status_code
-                if status in {429, 503} and attempt < attempts - 1:
-                    backoff = min(5, 2 ** attempt)
-                    logger.warning(
-                        "Yahoo quote status=%s symbol=%s retrying in %ss (attempt %s/%s)",
-                        status,
-                        symbol,
-                        backoff,
-                        attempt + 1,
-                        attempts,
-                    )
-                    time.sleep(backoff)
-                    continue
-                logger.error("Yahoo quote failed status=%s symbol=%s", status, symbol)
-                break
-            except Exception as exc:
-                logger.error("Yahoo quote error symbol=%s exc=%s", symbol, exc)
-                break
+        try:
+            response = self._client.get(YAHOO_QUOTE_URL, params=params)
+            response.raise_for_status()
+            payload = response.json()
+            result = (payload.get("quoteResponse") or {}).get("result") or []
+            if result:
+                info = result[0]
+                price = info.get("regularMarketPrice") or info.get("postMarketPrice")
+                currency = info.get("currency")
+        except Exception:
+            # Network errors return an empty quote; caller will see price None.
+            pass
         return PriceQuote(
             symbol=symbol,
             price=float(price) if price is not None else None,

@@ -24,7 +24,7 @@ def resolve_proxy(explicit: Optional[str] = None) -> Optional[str]:
 
     candidate = explicit if explicit is not None else os.environ.get("YF_PROXY")
     if candidate is None:
-        candidate = None #DEFAULT_PROXY_URL
+        candidate = DEFAULT_PROXY_URL
     logger.info("proxy=%s", candidate)
     candidate = candidate.strip() if candidate else ""
     return candidate or None
