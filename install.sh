@@ -3,7 +3,7 @@ set -e
 
 INSTALL_DIR="$HOME/.facai_mcp"
 VENV_NAME=".venv"
-REPO_URL="${REPO_URL:-https://github.com/yourusername/facai-portfolio-mcp.git}"
+REPO_URL="${REPO_URL:-https://github.com/hpsoar/facai.git}"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     CLAUDE_CONFIG_DIR="$HOME/Library/Application Support/Claude"

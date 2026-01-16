@@ -3,13 +3,13 @@
 ## 一条命令安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yourusername/facai-portfolio-mcp/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/hpsoar/facai/main/install.sh | bash
 ```
 
 如果需要使用自定义仓库地址，设置环境变量：
 
 ```bash
-REPO_URL=https://your-repo-url.git curl -fsSL https://raw.githubusercontent.com/yourusername/facai-portfolio-mcp/main/install.sh | bash
+REPO_URL=https://your-repo-url.git curl -fsSL https://raw.githubusercontent.com/hpsoar/facai/main/install.sh | bash
 ```
 
 ## 安装位置

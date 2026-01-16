@@ -162,7 +162,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--repo-url",
-        default="https://github.com/yourusername/facai-portfolio-mcp.git",
+        default="https://github.com/hpsoar/facai.git",
         help="Git 仓库 URL",
     )
     args = parser.parse_args()
