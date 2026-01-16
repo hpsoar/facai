@@ -43,6 +43,86 @@ so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具�
    - `PORTFOLIO_LOG_FILE`: where to write server logs (default `logs/portfolio-mcp.log`).
    - `PORTFOLIO_LOG_LEVEL`: logging level (default `INFO`).
 
+## Claude Desktop 配置
+
+### 1. 确保服务器已安装
+
+```bash
+# 在项目目录中
+pip install -e .
+
+# 验证安装
+which portfolio-mcp  # 或 python -m portfolio_mcp.server
+```
+
+### 2. 配置 Claude Desktop
+
+**macOS**: 编辑配置文件
+```bash
+open ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
+
+**Windows**: 编辑配置文件
+```bash
+%APPDATA%\Claude\claude_desktop_config.json
+```
+
+**Linux**: 编辑配置文件
+```bash
+~/.config/Claude/claude_desktop_config.json
+```
+
+### 3. 添加 MCP 服务器配置
+
+```json
+{
+  "mcpServers": {
+    "portfolio": {
+      "command": "/path/to/your/venv/bin/portfolio-mcp",
+      "env": {
+        "PORTFOLIO_FILE": "/path/to/your/data/portfolio.yaml",
+        "REFRESH_INTERVAL_SECONDS": "900",
+        "PRICE_TTL_SECONDS": "300",
+        "PORTFOLIO_LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}
+```
+
+请将 `/path/to/your/venv` 替换为你的虚拟环境路径，将 `/path/to/your/data` 替换为你的项目路径。
+
+### 4. 创建初始配置文件
+
+```bash
+cp data/sample_portfolio.yaml data/portfolio.yaml
+```
+
+### 5. 重启 Claude Desktop
+
+配置完成后重启，Claude 会自动加载 MCP 服务器。
+
+### 6. 使用示例
+
+在 Claude 中可直接调用工具:
+- `list_portfolios()` - 列出所有组合
+- `get_summary()` - 查看总览
+- `refresh_prices()` - 刷新价格
+- `search_symbols("茅台")` - 搜索股票代码
+- `add_holding(...)` - 添加持仓
+
+### 环境变量说明
+
+| 环境变量 | 默认值 | 说明 |
+|----------|--------|------|
+| `PORTFOLIO_FILE` | `data/portfolio.yaml` | 持仓 YAML 文件路径 |
+| `REFRESH_INTERVAL_SECONDS` | `900` | 后台刷新间隔(秒),设为 0 禁用自动刷新 |
+| `PRICE_TTL_SECONDS` | `300` | 价格缓存过期时间(秒) |
+| `YF_PROXY` | - | yfinance 代理 URL(可选) |
+| `YF_MAX_RETRIES` | `2` | 429/503 错误重试次数 |
+| `PORTFOLIO_LOG_FILE` | `logs/portfolio-mcp.log` | 日志文件路径 |
+| `PORTFOLIO_LOG_LEVEL` | `INFO` | 日志级别 |
+
 ## MCP Surfaces
 - **Resource** `portfolio://portfolios` — list portfolio ids, names, and holding counts.
 - **Resource** `portfolio://summary` — combined valuation totals with last refresh time.
