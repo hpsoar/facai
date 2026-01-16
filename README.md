@@ -55,7 +55,7 @@ so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具�
 - **Tool** `get_positions(symbol?, portfolio_id?)` — filter holdings by ticker, portfolio, or both.
 - **Tool** `reload_portfolio` — re-read the YAML file if you changed it on disk.
 - **Tool** `get_summary(portfolio_id?)` — structured summary for combined or per-portfolio views.
-- **Tool** `search_symbols(query, region?, limit?)` — yfinance-backed fuzzy lookup for tickers.
+- **Tool** `search_symbols(query, region?, limit?)` — symbol search with Chinese name support.
 - **Tool** `create_portfolio` / `update_portfolio` / `delete_portfolio(force?)` — manage portfolio
   containers.
 - **Tool** `add_holding` / `remove_holding` / `update_holding` — edit holdings (supports fuzzy search
@@ -113,10 +113,35 @@ default`).
 - **List** all portfolios: `list_portfolios`
 - **Add** a holding with fuzzy search: `add_holding(portfolio_id="hk-income", search_query="中电控股", quantity=100, cost_basis=49.5, currency="HKD")`
 - **Remove** a holding: `remove_holding(portfolio_id="hk-income", holding_key="clp")` (matches id or symbol)
-- **Update** a holding’s数量/成本: `update_holding(portfolio_id="hk-income", holding_id="clp", quantity=150)`
-- **Delete** a portfolio**:** `delete_portfolio(portfolio_id="hk-income", force=true)` (force required when非空)
+- **Update** a holding's quantity/cost: `update_holding(portfolio_id="hk-income", holding_id="clp", quantity=150)`
+- **Delete** a portfolio: `delete_portfolio(portfolio_id="hk-income", force=true)` (force required when non-empty)
 
 这些操作会自动落盘到 `PORTFOLIO_FILE` 并刷新行情缓存，Claude/CLI 即可立即使用最新配置。
+
+## Symbol Search
+
+The `search_symbols` tool supports multiple search methods:
+
+### Chinese Stock Names (NEW)
+Search A-shares and HK stocks by Chinese company names:
+- `search_symbols(query="茅台")` → Returns `600519.SS` (贵州茅台)
+- `search_symbols(query="腾讯")` → Returns `00700.HK` (腾讯控股)
+- `search_symbols(query="阿里巴巴")` → Returns `09988.HK` (阿里巴巴-W)
+
+This uses AKShare and East Money APIs to find Chinese stocks by name, then returns results in yfinance-compatible format.
+
+### Stock Codes
+Search by ticker codes (most precise):
+- `600519.SS` - Shanghai A-shares
+- `000963.SZ` - Shenzhen A-shares
+- `0700.HK` - Hong Kong stocks
+- `AAPL` - US stocks
+
+### English Names
+Search by English company names:
+- `search_symbols(query="Apple")` → Returns `AAPL`
+- `search_symbols(query="tencent")` → Returns `0700.HK`
+- `search_symbols(query="moutai")` → Returns `600519.SS`
 
 ## Scheduling Refreshes
 The server already refreshes prices in the background as long as it stays running. If you only want

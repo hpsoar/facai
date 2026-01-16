@@ -112,26 +112,30 @@ class TestSymbolSearch:
         assert any(r["symbol"] == "3690.HK" for r in results)
 
     def test_search_chinese_characters_not_supported(self) -> None:
-        """Test that Chinese character searches return no results.
+        """Test that Chinese character searches now work with Chinese stock APIs.
 
-        IMPORTANT: yfinance search API does NOT support Chinese characters.
-        Users must use ticker codes or English names instead.
+        With the new Chinese search integration (AKShare + East Money APIs),
+        Chinese character searches are now supported for A-shares and HK stocks.
         """
-        # Chinese characters don't work
+        # Chinese characters now work!
         results = search_symbols("茅台", quotes_count=10)
-        assert len(results) == 0
+        assert len(results) > 0
+        assert any(r["symbol"] == "600519.SS" for r in results)
 
         results = search_symbols("贵州茅台", quotes_count=10)
-        assert len(results) == 0
+        assert len(results) > 0
+        assert any(r["symbol"] == "600519.SS" for r in results)
 
         results = search_symbols("腾讯", quotes_count=10)
-        assert len(results) == 0
+        assert len(results) > 0
+        assert any(r["symbol"] == "00700.HK" for r in results)
 
         results = search_symbols("阿里巴巴", quotes_count=10)
-        assert len(results) == 0
+        assert len(results) > 0
+        assert any("9988.HK" in r["symbol"] for r in results)
 
-        # Even pinyin without spaces doesn't always work
-        results = search_symbols("guizhoumaotai", quotes_count=10)
+        # Invalid Chinese query still returns empty
+        results = search_symbols("不存在的股票名称", quotes_count=10)
         assert len(results) == 0
 
     def test_search_chinese_stocks_numeric_codes(self) -> None:

@@ -10,6 +10,7 @@ dependencies = [
     "pydantic>=2.7",
     "pyyaml>=6.0",
     "yfinance>=0.2.40",
+    "akshare>=1.12.0",
 ]
 
 [project.optional-dependencies]
