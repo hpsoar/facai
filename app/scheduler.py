@@ -35,11 +35,9 @@ class PricePoller:
         finally:
             self._task = None
 
-    async def refresh_now(self) -> Dict[str, PriceQuote]:
+async def refresh_now(self) -> Dict[str, PriceQuote]:
         symbols = self.store.symbols()
         quotes = await self.service.refresh_all(symbols)
-        async with self._lock:
-            self._quotes = quotes
         return quotes
 
     async def cached_quotes(self) -> Dict[str, PriceQuote]:

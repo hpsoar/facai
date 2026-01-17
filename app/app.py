@@ -17,7 +17,6 @@ from .models import (
 from .portfolio import AGGREGATE_PORTFOLIO_ID, PortfolioStore
 from .pricing import PriceService
 from .proxy import resolve_proxy
-from .scheduler import PricePoller
 from .yahoo import search_symbols as yahoo_symbol_search
 
 
@@ -28,7 +27,6 @@ class PortfolioApp:
         self.settings = settings
         self.store = PortfolioStore(settings.portfolio_file)
         self.price_service = PriceService(settings.price_ttl_seconds)
-        self.poller = PricePoller(self.store, self.price_service, settings.refresh_interval_seconds)
         self._startup_lock = asyncio.Lock()
         self._started = False
 
@@ -36,28 +34,28 @@ class PortfolioApp:
         async with self._startup_lock:
             if self._started:
                 return
-            await self.poller.start()
             self._started = True
 
     async def stop(self) -> None:
         async with self._startup_lock:
             if not self._started:
                 return
-            await self.poller.stop()
             await self.price_service.aclose()
             self._started = False
 
     async def refresh_prices(self) -> Dict[str, PriceQuote]:
-        return await self.poller.refresh_now()
+        symbols = self.store.symbols()
+        return await self.price_service.refresh_all(symbols)
 
     async def quotes(self) -> Dict[str, PriceQuote]:
-        return await self.poller.ensure_warm()
+        symbols = self.store.symbols()
+        return await self.price_service.get_quotes(symbols)
 
     async def snapshots(
         self, portfolio_id: Optional[str] = None, symbol: Optional[str] = None
     ) -> List[HoldingSnapshot]:
         if symbol:
-            quote = await self.poller.service.get_quote(symbol)
+            quote = await self.price_service.get_quote(symbol)
             quotes = {quote.symbol.upper(): quote}
         else:
             quotes = await self.quotes()
@@ -67,7 +65,7 @@ class PortfolioApp:
         self, portfolio_id: Optional[str] = None, symbol: Optional[str] = None
     ) -> PortfolioSummary:
         if symbol:
-            quote = await self.poller.service.get_quote(symbol)
+            quote = await self.price_service.get_quote(symbol)
             quotes = {quote.symbol.upper(): quote}
         else:
             quotes = await self.quotes()
