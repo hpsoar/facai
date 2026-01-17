@@ -61,15 +61,19 @@ class PriceService:
     async def get_quote(self, symbol: str) -> PriceQuote:
         return await self._get_symbol(symbol)
 
-    async def _get_symbol(self, symbol: str) -> PriceQuote:
+async def _get_symbol(self, symbol: str) -> PriceQuote:
         import traceback
         normalized = symbol.upper()
+        
+        if normalized.endswith('.HK'):
+            normalized = normalized.lstrip('0') if len(normalized) > 5 else normalized
+        
         cached = self._cache.get(normalized)
         now = datetime.now(timezone.utc)
         if cached and cached.expires_at > now:
             logger.debug("Cache hit for %s", normalized)
             return cached.quote
-        logger.info("Fetching price for %s\nCaller:\n%s", normalized, "".join(traceback.format_stack()[-50:-1]))
+        logger.debug("Fetching price for %s\nCaller:\n%s", normalized, "".join(traceback.format_stack()[-50:-1]))
         quote = await asyncio.to_thread(self._fetch_quote_sync, normalized)
         self._cache[normalized] = CacheEntry(
             quote=quote,
