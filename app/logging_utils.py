@@ -38,6 +38,10 @@ def setup_logging(log_file: Optional[str] = None, level_name: Optional[str] = No
         force=True,
     )
 
+    logging.getLogger("yfinance").setLevel(logging.WARNING)
+    logging.getLogger("yfinance.data").setLevel(logging.WARNING)
+    logging.getLogger("yfinance.utils").setLevel(logging.WARNING)
+
     logging.getLogger(__name__).info(
         "Logging initialized level=%s path=%s", level_str, resolved_path
     )
