@@ -69,7 +69,7 @@ class PriceService:
         if cached and cached.expires_at > now:
             logger.debug("Cache hit for %s", normalized)
             return cached.quote
-        logger.info("Fetching price for %s\nCaller:\n%s", normalized, "".join(traceback.format_stack()[-6:-1]))
+        logger.info("Fetching price for %s\nCaller:\n%s", normalized, "".join(traceback.format_stack()[-50:-1]))
         quote = await asyncio.to_thread(self._fetch_quote_sync, normalized)
         self._cache[normalized] = CacheEntry(
             quote=quote,
