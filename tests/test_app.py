@@ -55,6 +55,21 @@ class TestPortfolioApp:
         assert snapshots[0].holding.symbol == "600519.SS"
 
     @pytest.mark.asyncio
+    async def test_get_snapshots_with_symbol(self, app: PortfolioApp) -> None:
+        """Test getting snapshots filtered by symbol."""
+        snapshots = await app.snapshots(symbol="600519.SS")
+        assert len(snapshots) == 1
+        assert snapshots[0].holding.symbol == "600519.SS"
+
+    @pytest.mark.asyncio
+    async def test_get_summary_with_symbol(self, app: PortfolioApp) -> None:
+        """Test getting summary filtered by symbol."""
+        summary = await app.summary(symbol="600519.SS")
+        assert summary.portfolio_id == "all"
+        assert summary.holding_count == 1
+        assert summary.symbols == ["600519.SS"]
+
+    @pytest.mark.asyncio
     async def test_refresh_prices(self, app: PortfolioApp) -> None:
         """Test refreshing prices."""
         quotes = await app.refresh_prices()
@@ -145,6 +160,30 @@ class TestPortfolioApp:
         assert "holding" in result
         assert result["holding"]["symbol"] == "AAPL"
         assert result["holding"]["quantity"] == 10.0
+        assert result["holding"]["name"] == "Apple Inc."
+
+    @pytest.mark.asyncio
+    async def test_add_holding_requires_name(self, app: PortfolioApp) -> None:
+        """Test that adding a holding requires a name."""
+        # Create a test portfolio
+        await app.create_portfolio("name-test", "Name Test", None)
+
+        with pytest.raises(ValueError, match="name must be provided"):
+            await app.add_holding(
+                "name-test",
+                symbol="AAPL",
+                quantity=10,
+                cost_basis=150.0,
+                currency="USD",
+                name=None,
+                search_query=None,
+                search_region=None,
+                search_limit=5,
+                broker=None,
+                category=None,
+                notes=None,
+                holding_id=None,
+            )
 
     @pytest.mark.asyncio
     async def test_add_holding_with_search(self, app: PortfolioApp) -> None:
@@ -171,6 +210,7 @@ class TestPortfolioApp:
 
         assert "holding" in result
         assert result["holding"]["symbol"] is not None
+        assert result["holding"]["name"] is not None
         assert "search_matches" in result
 
     @pytest.mark.asyncio
@@ -212,6 +252,7 @@ class TestPortfolioApp:
         assert updated["holding"]["quantity"] == 20.0
         assert updated["holding"]["cost_basis"] == 160.0
         assert updated["holding"]["symbol"] == "MSFT"
+        assert updated["holding"]["name"] == "Microsoft Corp."
 
     @pytest.mark.asyncio
     async def test_remove_holding(self, app: PortfolioApp) -> None:
@@ -243,3 +284,73 @@ class TestPortfolioApp:
         # Verify it's gone from snapshots
         snapshots = await app.snapshots("remove-holding-test")
         assert len(snapshots) == 0
+
+    @pytest.mark.asyncio
+    async def test_price_cache(self, app: PortfolioApp) -> None:
+        """Test that price caching works."""
+        quotes1 = await app.price_service.get_quotes(["600519.SS"])
+        assert "600519.SS" in quotes1
+
+        quotes2 = await app.price_service.get_quotes(["600519.SS"])
+        assert "600519.SS" in quotes2
+        assert quotes1["600519.SS"].price == quotes2["600519.SS"].price
+
+    @pytest.mark.asyncio
+    async def test_hk_stock_code_normalization(self, app: PortfolioApp) -> None:
+        """Test that HK stock codes with leading zeros are normalized."""
+        quote1 = await app.price_service.get_quote("09988.HK")
+        assert quote1 is not None
+
+        quote2 = await app.price_service.get_quote("9988.HK")
+        assert quote2 is not None
+
+    @pytest.mark.asyncio
+    async def test_no_auto_refresh_after_operations(self, app: PortfolioApp) -> None:
+        """Test that holding operations don't trigger auto refresh."""
+        await app.create_portfolio("no-refresh-test", "No Refresh Test", None)
+        await app.add_holding(
+            "no-refresh-test",
+            symbol="AAPL",
+            quantity=10,
+            cost_basis=150.0,
+            currency="USD",
+            name="Apple Inc.",
+            search_query=None,
+            search_region=None,
+            search_limit=5,
+            broker=None,
+            category=None,
+            notes=None,
+            holding_id=None,
+        )
+
+        add_result = await app.add_holding(
+            "no-refresh-test",
+            symbol="MSFT",
+            quantity=5,
+            cost_basis=200.0,
+            currency="USD",
+            name="Microsoft",
+            search_query=None,
+            search_region=None,
+            search_limit=5,
+            broker=None,
+            category=None,
+            notes=None,
+            holding_id=None,
+        )
+        holding_id = add_result["holding"]["id"]
+        await app.update_holding(
+            "no-refresh-test",
+            holding_id,
+            quantity=15,
+            cost_basis=210.0,
+            notes=None,
+            broker=None,
+            category=None,
+            name="Microsoft Corp.",
+            currency=None,
+            symbol=None,
+        )
+
+        await app.remove_holding("no-refresh-test", holding_id)
