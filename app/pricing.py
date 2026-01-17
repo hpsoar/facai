@@ -62,11 +62,19 @@ class PriceService:
         return await self._get_symbol(symbol)
 
     async def _get_symbol(self, symbol: str) -> PriceQuote:
+        import traceback
+
         normalized = symbol.upper()
         cached = self._cache.get(normalized)
         now = datetime.now(timezone.utc)
         if cached and cached.expires_at > now:
+            logger.debug("Cache hit for %s", normalized)
             return cached.quote
+        logger.info(
+            "Fetching price for %s (caller: %s)",
+            normalized,
+            "".join(traceback.format_stack()[-4:-1]),
+        )
         quote = await asyncio.to_thread(self._fetch_quote_sync, normalized)
         self._cache[normalized] = CacheEntry(
             quote=quote,
@@ -96,7 +104,7 @@ class PriceService:
                     attempts,
                 )
             if attempt < attempts - 1:
-                backoff = min(2 ** attempt, 5)
+                backoff = min(2**attempt, 5)
                 time.sleep(backoff)
         if price is None and last_error is not None:
             logger.warning("Failed to fetch price for %s via yfinance: %s", symbol, last_error)
@@ -108,7 +116,9 @@ class PriceService:
             provider=provider,
         )
 
-    def _extract_price_and_currency(self, ticker: yf.Ticker) -> tuple[Optional[float], Optional[str]]:
+    def _extract_price_and_currency(
+        self, ticker: yf.Ticker
+    ) -> tuple[Optional[float], Optional[str]]:
         price = None
         currency = None
         history = None
