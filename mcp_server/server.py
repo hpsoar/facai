@@ -232,8 +232,9 @@ def build_server(app: PortfolioApp, *, name: str, version: str) -> FastMCP:
         category: Optional[str] = None,
         name: Optional[str] = None,
         currency: Optional[str] = None,
+        symbol: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Update holding properties such as quantity, cost basis, or notes."""
+        """Update holding properties such as quantity, cost basis, symbol, or notes."""
         result = await app.update_holding(
             portfolio_id,
             holding_id,
@@ -244,12 +245,15 @@ def build_server(app: PortfolioApp, *, name: str, version: str) -> FastMCP:
             category=category,
             name=name,
             currency=currency,
+            symbol=symbol,
         )
         logger.info("Tool update_holding portfolio=%s holding=%s", portfolio_id, holding_id)
         return result
 
     @mcp.tool()
-    async def search_symbols(query: str, region: Optional[str] = None, limit: int = 5) -> Dict[str, Any]:
+    async def search_symbols(
+        query: str, region: Optional[str] = None, limit: int = 5
+    ) -> Dict[str, Any]:
         """Fuzzy search for symbols via yfinance SDK."""
         result = await app.search_symbols(query, region, limit)
         logger.info(

@@ -2,6 +2,8 @@
 set -e
 
 INSTALL_DIR="$HOME/.facai_mcp"
+CODE_DIR="$INSTALL_DIR/facai"
+DATA_DIR="$INSTALL_DIR/data"
 VENV_NAME=".venv"
 REPO_URL="${REPO_URL:-https://github.com/hpsoar/facai.git}"
 
@@ -22,22 +24,13 @@ echo "========================================"
 echo ""
 
 echo "步骤 1: 克隆代码仓库..."
-if [ -d "$INSTALL_DIR" ]; then
-    echo "目录已存在: $INSTALL_DIR"
-    read -p "是否删除并重新克隆? [y/N] " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        rm -rf "$INSTALL_DIR"
-        echo "已删除旧目录"
-    else
-        echo "跳过克隆步骤"
-    fi
+mkdir -p "$INSTALL_DIR"
+if [ -d "$CODE_DIR" ]; then
+    echo "删除旧代码目录: $CODE_DIR"
+    rm -rf "$CODE_DIR"
 fi
-
-if [ ! -d "$INSTALL_DIR" ]; then
-    echo "克隆仓库: $REPO_URL"
-    git clone "$REPO_URL" "$INSTALL_DIR"
-fi
+echo "克隆仓库: $REPO_URL"
+git clone "$REPO_URL" "$CODE_DIR"
 
 echo ""
 echo "步骤 2: 创建虚拟环境..."
@@ -52,14 +45,15 @@ fi
 echo ""
 echo "步骤 3: 安装依赖..."
 "$VENV_DIR/bin/pip" install --upgrade pip -q
-"$VENV_DIR/bin/pip" install -e "$INSTALL_DIR" -q
+"$VENV_DIR/bin/pip" install -e "$CODE_DIR" -q
 echo "依赖安装完成"
 
 echo ""
 echo "步骤 4: 创建示例配置文件..."
-PORTFOLIO_FILE="$INSTALL_DIR/data/portfolio.yaml"
+mkdir -p "$DATA_DIR"
+PORTFOLIO_FILE="$DATA_DIR/portfolio.yaml"
 if [ ! -f "$PORTFOLIO_FILE" ]; then
-    cp "$INSTALL_DIR/data/sample_portfolio.yaml" "$PORTFOLIO_FILE"
+    cp "$CODE_DIR/data/sample_portfolio.yaml" "$PORTFOLIO_FILE"
     echo "示例配置已创建: $PORTFOLIO_FILE"
 else
     echo "配置文件已存在: $PORTFOLIO_FILE"
@@ -108,7 +102,9 @@ echo "安装完成!"
 echo "========================================"
 echo ""
 echo "安装目录: $INSTALL_DIR"
-echo "虚拟环境: $VENV_DIR"
+echo "  - 代码: $CODE_DIR"
+echo "  - 数据: $DATA_DIR"
+echo "  - 虚拟环境: $VENV_DIR"
 echo "配置文件: $INSTALL_DIR/claude_mcp_config.json"
 echo ""
 

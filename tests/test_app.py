@@ -204,12 +204,14 @@ class TestPortfolioApp:
             notes=None,
             broker=None,
             category=None,
-            name=None,
+            name="Microsoft Corp.",
             currency=None,
+            symbol="MSFT",
         )
 
         assert updated["holding"]["quantity"] == 20.0
         assert updated["holding"]["cost_basis"] == 160.0
+        assert updated["holding"]["symbol"] == "MSFT"
 
     @pytest.mark.asyncio
     async def test_remove_holding(self, app: PortfolioApp) -> None:

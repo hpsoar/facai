@@ -15,7 +15,9 @@ REPO_URL=https://your-repo-url.git curl -fsSL https://raw.githubusercontent.com/
 ## 安装位置
 
 - 安装目录：`~/.facai_mcp`
-- 虚拟环境：`~/.facai_mcp/.venv`
+  - 代码：`~/.facai_mcp/facai`
+  - 数据：`~/.facai_mcp/data`
+  - 虚拟环境：`~/.facai_mcp/.venv`
 - 配置文件：`~/.facai_mcp/data/portfolio.yaml`
 
 ## 自动配置

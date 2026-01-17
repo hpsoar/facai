@@ -36,7 +36,6 @@ class PortfolioApp:
         async with self._startup_lock:
             if self._started:
                 return
-            await self.poller.ensure_warm()
             await self.poller.start()
             self._started = True
 
@@ -134,8 +133,12 @@ class PortfolioApp:
             if not matches:
                 raise ValueError(f"No symbols found for query '{search_query}'")
             resolved_symbol = matches[0].get("symbol")
+            if not name:
+                name = matches[0].get("shortName") or matches[0].get("longName")
         if not resolved_symbol:
             raise ValueError("symbol or search_query must be provided")
+        if not name:
+            raise ValueError("name must be provided")
         holding = Holding(
             id=holding_id,
             symbol=resolved_symbol,
@@ -170,6 +173,7 @@ class PortfolioApp:
         category: Optional[str],
         name: Optional[str],
         currency: Optional[str],
+        symbol: Optional[str],
     ) -> Dict[str, Any]:
         holding = self.store.update_holding(
             portfolio_id,
@@ -181,6 +185,7 @@ class PortfolioApp:
             category=category,
             name=name,
             currency=currency,
+            symbol=symbol,
         )
         self.store.reload()
         await self.poller.refresh_now()

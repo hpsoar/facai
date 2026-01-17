@@ -14,7 +14,7 @@ class Holding(BaseModel):
     cost_basis: float = Field(..., ge=0, description="Per-share cost basis in holding currency")
     currency: Optional[str] = Field(None, description="Currency code of the cost basis")
     id: Optional[str] = Field(None, description="User defined unique identifier")
-    name: Optional[str] = None
+    name: str = Field(..., description="Holding name")
     broker: Optional[str] = None
     category: Optional[str] = None
     notes: Optional[str] = None

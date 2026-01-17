@@ -121,14 +121,8 @@ class PortfolioStore:
         snapshots: List[HoldingSnapshot] = []
         for definition, holding in self._iter_holdings(portfolio_id):
             quote = quotes.get(holding.symbol.upper()) or PriceQuote(symbol=holding.symbol)
-            market_value = (
-                holding.quantity * quote.price if quote.price is not None else None
-            )
-            gain_abs = (
-                market_value - holding.book_value()
-                if market_value is not None
-                else None
-            )
+            market_value = holding.quantity * quote.price if quote.price is not None else None
+            gain_abs = market_value - holding.book_value() if market_value is not None else None
             gain_pct = (
                 (market_value / holding.book_value()) - 1
                 if market_value is not None and holding.book_value() > 0
@@ -191,7 +185,9 @@ class PortfolioStore:
             )
         return items
 
-    def create_portfolio(self, portfolio_id: str, name: Optional[str], notes: Optional[str]) -> PortfolioDefinition:
+    def create_portfolio(
+        self, portfolio_id: str, name: Optional[str], notes: Optional[str]
+    ) -> PortfolioDefinition:
         self._ensure_portfolios_initialized()
         if not portfolio_id:
             raise ValueError("portfolio_id is required")
@@ -297,6 +293,7 @@ class PortfolioStore:
         category: Optional[str] = None,
         name: Optional[str] = None,
         currency: Optional[str] = None,
+        symbol: Optional[str] = None,
     ) -> Holding:
         self._ensure_portfolios_initialized()
         if portfolio_id not in self._portfolios:
@@ -319,6 +316,8 @@ class PortfolioStore:
             holding.name = name
         if currency is not None:
             holding.currency = currency
+        if symbol is not None:
+            holding.symbol = symbol
         self.save()
         self._refresh_cache()
         return holding
