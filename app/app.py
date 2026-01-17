@@ -53,12 +53,24 @@ class PortfolioApp:
     async def quotes(self) -> Dict[str, PriceQuote]:
         return await self.poller.ensure_warm()
 
-    async def snapshots(self, portfolio_id: Optional[str] = None) -> List[HoldingSnapshot]:
-        quotes = await self.quotes()
+    async def snapshots(
+        self, portfolio_id: Optional[str] = None, symbol: Optional[str] = None
+    ) -> List[HoldingSnapshot]:
+        if symbol:
+            quote = await self.poller.service.get_quote(symbol)
+            quotes = {quote.symbol.upper(): quote}
+        else:
+            quotes = await self.quotes()
         return self.store.snapshots(quotes, portfolio_id)
 
-    async def summary(self, portfolio_id: Optional[str] = None) -> PortfolioSummary:
-        quotes = await self.quotes()
+    async def summary(
+        self, portfolio_id: Optional[str] = None, symbol: Optional[str] = None
+    ) -> PortfolioSummary:
+        if symbol:
+            quote = await self.poller.service.get_quote(symbol)
+            quotes = {quote.symbol.upper(): quote}
+        else:
+            quotes = await self.quotes()
         return self.store.summary(quotes, portfolio_id)
 
     async def reload_portfolio(self) -> PortfolioFile:

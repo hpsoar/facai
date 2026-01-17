@@ -101,7 +101,7 @@ def build_server(app: PortfolioApp, *, name: str, version: str) -> FastMCP:
         symbol: Optional[str] = None, portfolio_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """Return holdings, optionally filtered by ticker symbol or portfolio."""
-        snapshots = await app.snapshots(portfolio_id=portfolio_id)
+        snapshots = await app.snapshots(portfolio_id=portfolio_id, symbol=symbol)
         items = [_serialize_snapshot(s) for s in snapshots]
         if symbol:
             target = symbol.upper()
