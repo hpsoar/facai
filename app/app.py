@@ -61,7 +61,7 @@ class PortfolioApp:
             quotes = {quote.symbol.upper(): quote}
         else:
             quotes = await self.quotes()
-        return self.store.snapshots(quotes, portfolio_id)
+        return self.store.snapshots(quotes, portfolio_id, symbol)
 
     async def summary(
         self, portfolio_id: Optional[str] = None, symbol: Optional[str] = None
@@ -71,7 +71,7 @@ class PortfolioApp:
             quotes = {quote.symbol.upper(): quote}
         else:
             quotes = await self.quotes()
-        return self.store.summary(quotes, portfolio_id)
+        return self.store.summary(quotes, portfolio_id, symbol)
 
     async def reload_portfolio(self) -> PortfolioFile:
         return await asyncio.to_thread(self.store.reload)

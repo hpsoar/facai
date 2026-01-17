@@ -116,10 +116,15 @@ class PortfolioStore:
             yield definition, holding
 
     def snapshots(
-        self, quotes: Dict[str, PriceQuote], portfolio_id: Optional[str] = None
+        self,
+        quotes: Dict[str, PriceQuote],
+        portfolio_id: Optional[str] = None,
+        symbol: Optional[str] = None,
     ) -> List[HoldingSnapshot]:
         snapshots: List[HoldingSnapshot] = []
         for definition, holding in self._iter_holdings(portfolio_id):
+            if symbol and holding.symbol.upper() != symbol.upper():
+                continue
             quote = quotes.get(holding.symbol.upper()) or PriceQuote(symbol=holding.symbol)
             market_value = holding.quantity * quote.price if quote.price is not None else None
             gain_abs = market_value - holding.book_value() if market_value is not None else None
@@ -142,9 +147,12 @@ class PortfolioStore:
         return snapshots
 
     def summary(
-        self, quotes: Dict[str, PriceQuote], portfolio_id: Optional[str] = None
+        self,
+        quotes: Dict[str, PriceQuote],
+        portfolio_id: Optional[str] = None,
+        symbol: Optional[str] = None,
     ) -> PortfolioSummary:
-        snapshots = self.snapshots(quotes, portfolio_id)
+        snapshots = self.snapshots(quotes, portfolio_id, symbol)
         total_book = sum(h.holding.book_value() for h in snapshots)
         total_market = sum((h.market_value or 0.0) for h in snapshots)
         total_gain = total_market - total_book
