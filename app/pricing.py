@@ -61,7 +61,7 @@ class PriceService:
     async def get_quote(self, symbol: str) -> PriceQuote:
         return await self._get_symbol(symbol)
 
-async def _get_symbol(self, symbol: str) -> PriceQuote:
+    async def _get_symbol(self, symbol: str) -> PriceQuote:
         import traceback
         normalized = symbol.upper()
         cached = self._cache.get(normalized)
