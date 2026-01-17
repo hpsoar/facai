@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-DEFAULT_LOG_FILE = "/tmp/logs/portfolio-mcp.log"
+DEFAULT_LOG_FILE = "/tmp/logs/facai-mcp.log"
 DEFAULT_LOG_LEVEL = "INFO"
 
 
@@ -15,7 +15,7 @@ def setup_logging(log_file: Optional[str] = None, level_name: Optional[str] = No
     """Configure application-wide logging directed to a file.
 
     Parameters can be supplied directly or via environment variables:
-    - ``PORTFOLIO_LOG_FILE``: file path for log output (defaults to logs/portfolio-mcp.log).
+    - ``PORTFOLIO_LOG_FILE``: file path for log output (defaults to logs/facai-mcp.log).
     - ``PORTFOLIO_LOG_LEVEL``: logging level (DEBUG, INFO, WARNING, etc.).
 
     Returns the resolved log file path so callers can report it.

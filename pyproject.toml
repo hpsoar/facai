@@ -21,7 +21,7 @@ dev = [
 ]
 
 [project.scripts]
-portfolio-mcp = "portfolio_mcp.__main__:main"
+facai-mcp = "app.__main__:main"
 
 [tool.ruff]
 line-length = 100
@@ -31,11 +31,12 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.hatch.build.targets.wheel]
-packages = ["portfolio_mcp"]
+packages = ["app", "mcp_server"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "portfolio_mcp",
+    "app",
+    "mcp_server",
     "data",
     "README.md",
     "pyproject.toml",

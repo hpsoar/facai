@@ -30,9 +30,9 @@ so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具�
    Adjust the portfolios/holdings with your tickers, quantities, and cost basis data. Symbols follow
    the Yahoo Finance/yfinance format (e.g., `AAPL`, `0700.HK`, `600519.SS`, `000001.SZ`).
 4. **Run the MCP server**
-   ```bash
-   portfolio-mcp
-   ```
+    ```bash
+    facai-mcp
+    ```
    The binary speaks MCP over stdio, so point your AI client to the script. Use env vars to tweak
    behavior:
    - `PORTFOLIO_FILE`: path to the YAML holdings file (default `data/portfolio.yaml`).
@@ -52,7 +52,7 @@ so你 can view单个组合 or aggregated totals on demand,并通过 MCP 工具�
 pip install -e .
 
 # 验证安装
-which portfolio-mcp  # 或 python -m portfolio_mcp.server
+which facai-mcp  # 或 python -m app.__main__
 ```
 
 ### 2. 配置 Claude Desktop
@@ -77,8 +77,8 @@ open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ```json
 {
   "mcpServers": {
-    "portfolio": {
-      "command": "/path/to/your/venv/bin/portfolio-mcp",
+    "facai": {
+      "command": "/path/to/your/venv/bin/facai-mcp",
       "env": {
         "PORTFOLIO_FILE": "/path/to/your/data/portfolio.yaml",
         "REFRESH_INTERVAL_SECONDS": "900",
@@ -120,7 +120,7 @@ cp data/sample_portfolio.yaml data/portfolio.yaml
 | `PRICE_TTL_SECONDS` | `300` | 价格缓存过期时间(秒) |
 | `YF_PROXY` | - | yfinance 代理 URL(可选) |
 | `YF_MAX_RETRIES` | `2` | 429/503 错误重试次数 |
-| `PORTFOLIO_LOG_FILE` | `logs/portfolio-mcp.log` | 日志文件路径 |
+| `PORTFOLIO_LOG_FILE` | `logs/facai-mcp.log` | 日志文件路径 |
 | `PORTFOLIO_LOG_LEVEL` | `INFO` | 日志级别 |
 
 ## MCP Surfaces
@@ -144,7 +144,7 @@ cp data/sample_portfolio.yaml data/portfolio.yaml
 The CLI defaults to stdio transport, but you can switch transports when needed:
 
 ```bash
-portfolio-mcp --transport streamable-http --host 0.0.0.0 --port 9000
+facai-mcp --transport streamable-http --host 0.0.0.0 --port 9000
 ```
 
 ## Data File Format
@@ -183,7 +183,7 @@ and keep a top-level `holdings:` list—the server will treat it as a default po
 default`).
 
 ## Logging
-- Logs are written to `logs/portfolio-mcp.log` by default; override with `PORTFOLIO_LOG_FILE`.
+- Logs are written to `logs/facai-mcp.log` by default; override with `PORTFOLIO_LOG_FILE`.
 - Adjust verbosity via `PORTFOLIO_LOG_LEVEL` (e.g., `DEBUG` for detailed traces).
 - Each resource/tool invocation records concise entries (portfolio id, holdings count, key params) so
   you can audit AI actions without reading stdout.

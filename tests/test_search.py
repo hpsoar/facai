@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from portfolio_mcp.yahoo import search_symbols
+from app.yahoo import search_symbols
 
 
 class TestSymbolSearch:

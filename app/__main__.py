@@ -10,7 +10,7 @@ from . import __version__
 from .app import PortfolioApp
 from .config import load_settings
 from .logging_utils import setup_logging
-from .server import build_server
+from mcp_server.server import build_server
 
 
 def parse_args() -> argparse.Namespace:

@@ -9,8 +9,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional
 
 from mcp.server.fastmcp import FastMCP
 
-from .app import PortfolioApp
-from .models import HoldingSnapshot, PortfolioSummary
+from app import PortfolioApp
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +18,11 @@ def _dump_json(payload: Any) -> str:
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
 
-def _serialize_summary(summary: PortfolioSummary) -> Dict[str, Any]:
+def _serialize_summary(summary) -> Dict[str, Any]:
     return summary.model_dump(mode="json")
 
 
-def _serialize_snapshot(snapshot: HoldingSnapshot) -> Dict[str, Any]:
+def _serialize_snapshot(snapshot) -> Dict[str, Any]:
     return snapshot.model_dump(mode="json")
 
 
@@ -38,7 +37,6 @@ def build_server(app: PortfolioApp, *, name: str, version: str) -> FastMCP:
         finally:
             await app.stop()
 
-    # FastMCP no longer accepts a version argument; keep the value available for future use.
     mcp = FastMCP(name=name, lifespan=lifespan)
 
     @mcp.resource("portfolio://portfolios")
@@ -118,7 +116,7 @@ def build_server(app: PortfolioApp, *, name: str, version: str) -> FastMCP:
 
     @mcp.tool()
     async def reload_portfolio() -> Dict[str, Any]:
-        """Reload the YAML holdings file from disk."""
+        """Reload YAML holdings file from disk."""
         data = await app.reload_portfolio()
         result = {
             "base_currency": data.base_currency,
@@ -252,7 +250,7 @@ def build_server(app: PortfolioApp, *, name: str, version: str) -> FastMCP:
 
     @mcp.tool()
     async def search_symbols(query: str, region: Optional[str] = None, limit: int = 5) -> Dict[str, Any]:
-        """Fuzzy search for symbols via the yfinance SDK."""
+        """Fuzzy search for symbols via yfinance SDK."""
         result = await app.search_symbols(query, region, limit)
         logger.info(
             "Tool search_symbols query=%s results=%s error=%s",

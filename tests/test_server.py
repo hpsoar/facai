@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from portfolio_mcp.app import PortfolioApp
-from portfolio_mcp.server import build_server
+from app import PortfolioApp
+from mcp_server.server import build_server
 
 
 class TestMCPServer:

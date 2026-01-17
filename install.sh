@@ -17,7 +17,7 @@ else
 fi
 
 echo "========================================"
-echo "Facai Portfolio MCP 安装脚本"
+echo "Facai MCP 安装脚本"
 echo "========================================"
 echo ""
 
@@ -68,16 +68,16 @@ fi
 echo ""
 echo "步骤 5: 生成 MCP 配置..."
 if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-    PORTFOLIO_MCP_CMD=$(echo "$INSTALL_DIR/$VENV_NAME/Scripts/portfolio-mcp.exe" | sed 's|/|\\|g')
+    FACAI_MCP_CMD=$(echo "$INSTALL_DIR/$VENV_NAME/Scripts/facai-mcp.exe" | sed 's|/|\\|g')
 else
-    PORTFOLIO_MCP_CMD="$INSTALL_DIR/$VENV_NAME/bin/portfolio-mcp"
+    FACAI_MCP_CMD="$INSTALL_DIR/$VENV_NAME/bin/facai-mcp"
 fi
 
 MCP_CONFIG=$(cat <<EOF
 {
   "mcpServers": {
-    "portfolio": {
-      "command": "$PORTFOLIO_MCP_CMD",
+    "facai": {
+      "command": "$FACAI_MCP_CMD",
       "env": {
         "PORTFOLIO_FILE": "$PORTFOLIO_FILE",
         "REFRESH_INTERVAL_SECONDS": "900",
@@ -95,7 +95,7 @@ echo "配置已生成: $INSTALL_DIR/claude_mcp_config.json"
 
 echo ""
 echo "步骤 6: 验证安装..."
-if "$VENV_DIR/bin/python" -m portfolio_mcp.server --help > /dev/null 2>&1; then
+if "$VENV_DIR/bin/python" -m app.__main__ --help > /dev/null 2>&1; then
     echo "✓ MCP 服务器安装成功"
 else
     echo "✗ MCP 服务器验证失败"

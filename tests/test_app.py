@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from portfolio_mcp.app import PortfolioApp
+from app import PortfolioApp
 
 
 class TestPortfolioApp:

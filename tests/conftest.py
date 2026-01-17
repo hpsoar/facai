@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from portfolio_mcp.app import PortfolioApp
-from portfolio_mcp.config import Settings
+from app import PortfolioApp
+from app.config import Settings
 
 
 @pytest.fixture
