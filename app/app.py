@@ -164,13 +164,11 @@ class PortfolioApp:
         )
         saved = self.store.add_holding(portfolio_id, holding)
         self.store.reload()
-        await self.poller.refresh_now()
         return {"holding": saved.model_dump(mode="json"), "search_matches": matches}
 
     async def remove_holding(self, portfolio_id: str, holding_key: str) -> Dict[str, Any]:
         holding = self.store.remove_holding(portfolio_id, holding_key)
         self.store.reload()
-        await self.poller.refresh_now()
         return {"holding": holding.model_dump(mode="json")}
 
     async def update_holding(
@@ -200,7 +198,6 @@ class PortfolioApp:
             symbol=symbol,
         )
         self.store.reload()
-        await self.poller.refresh_now()
         return {"holding": holding.model_dump(mode="json")}
 
     async def search_symbols(self, query: str, region: Optional[str], limit: int) -> Dict[str, Any]:
