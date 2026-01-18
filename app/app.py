@@ -56,7 +56,7 @@ class PortfolioApp:
     ) -> List[HoldingSnapshot]:
         if symbol:
             quote = await self.price_service.get_quote(symbol)
-            quotes = {quote.symbol.upper(): quote}
+            quotes = {symbol.upper(): quote}
         else:
             quotes = await self.quotes()
         return self.store.snapshots(quotes, portfolio_id, symbol)
@@ -66,7 +66,7 @@ class PortfolioApp:
     ) -> PortfolioSummary:
         if symbol:
             quote = await self.price_service.get_quote(symbol)
-            quotes = {quote.symbol.upper(): quote}
+            quotes = {symbol.upper(): quote}
         else:
             quotes = await self.quotes()
         return self.store.summary(quotes, portfolio_id, symbol)
