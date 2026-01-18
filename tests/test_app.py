@@ -297,12 +297,38 @@ class TestPortfolioApp:
 
     @pytest.mark.asyncio
     async def test_hk_stock_code_normalization(self, app: PortfolioApp) -> None:
-        """Test that HK stock codes with leading zeros are normalized."""
-        quote1 = await app.price_service.get_quote("09988.HK")
+        """Test that HK stock codes are normalized to 4-digit format."""
+        quote1 = await app.price_service.get_quote("0700.HK")
         assert quote1 is not None
+        assert quote1.symbol == "0700.HK"
 
-        quote2 = await app.price_service.get_quote("9988.HK")
+        quote2 = await app.price_service.get_quote("700.HK")
         assert quote2 is not None
+        assert quote2.symbol == "0700.HK"
+
+        quote3 = await app.price_service.get_quote("00700.HK")
+        assert quote3 is not None
+        assert quote3.symbol == "0700.HK"
+
+        quote4 = await app.price_service.get_quote("02050.HK")
+        assert quote4 is not None
+        assert quote4.symbol == "2050.HK"
+
+        quote5 = await app.price_service.get_quote("0005.HK")
+        assert quote5 is not None
+        assert quote5.symbol == "0005.HK"
+
+    @pytest.mark.asyncio
+    async def test_get_quotes_key_mapping(self, app: PortfolioApp) -> None:
+        """Test that get_quotes returns dict with original input symbols as keys."""
+        symbols = ["02050.HK", "0700.HK", "700.HK", "00700.HK"]
+        quotes = await app.price_service.get_quotes(symbols)
+
+        assert all(s in quotes for s in symbols)
+        assert quotes["02050.HK"].symbol == "2050.HK"
+        assert quotes["0700.HK"].symbol == "0700.HK"
+        assert quotes["700.HK"].symbol == "0700.HK"
+        assert quotes["00700.HK"].symbol == "0700.HK"
 
     @pytest.mark.asyncio
     async def test_no_auto_refresh_after_operations(self, app: PortfolioApp) -> None:

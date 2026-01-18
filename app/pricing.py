@@ -51,9 +51,10 @@ class PriceService:
         return None
 
     async def get_quotes(self, symbols: Iterable[str]) -> Dict[str, PriceQuote]:
-        tasks = [self._get_symbol(symbol) for symbol in symbols]
-        quotes = await asyncio.gather(*tasks)
-        return {quote.symbol.upper(): quote for quote in quotes}
+        symbols_list = list(symbols)
+        quote_tasks = [self._get_symbol(symbol) for symbol in symbols_list]
+        quotes = await asyncio.gather(*quote_tasks)
+        return {original.upper(): quote for original, quote in zip(symbols_list, quotes)}
 
     async def refresh_all(self, symbols: Iterable[str]) -> Dict[str, PriceQuote]:
         return await self.get_quotes(symbols)
@@ -63,17 +64,26 @@ class PriceService:
 
     async def _get_symbol(self, symbol: str) -> PriceQuote:
         import traceback
+
         normalized = symbol.upper()
-        
-        if normalized.endswith('.HK'):
-            normalized = normalized.lstrip('0') if len(normalized) > 5 else normalized
-        
+
+        # Normalize HK stock symbols to 4-digit format (e.g., 700.HK -> 0700.HK)
+        if normalized.endswith(".HK"):
+            num_part = (
+                normalized[:-3].lstrip("0") or "0"
+            )  # Remove leading zeros, keep at least one digit
+            normalized = num_part.zfill(4) + ".HK"  # Pad to 4 digits with leading zeros
+
         cached = self._cache.get(normalized)
         now = datetime.now(timezone.utc)
         if cached and cached.expires_at > now:
             logger.debug("Cache hit for %s", normalized)
             return cached.quote
-        logger.debug("Fetching price for %s\nCaller:\n%s", normalized, "".join(traceback.format_stack()[-50:-1]))
+        logger.debug(
+            "Fetching price for %s\nCaller:\n%s",
+            normalized,
+            "".join(traceback.format_stack()[-50:-1]),
+        )
         quote = await asyncio.to_thread(self._fetch_quote_sync, normalized)
         self._cache[normalized] = CacheEntry(
             quote=quote,
